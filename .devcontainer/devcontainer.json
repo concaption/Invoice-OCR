@@ -1,18 +1,18 @@
 {
     "customizations": {
-        "codespaces": {
-        },
         "vscode": {
             "extensions": [
-				"ms-python.python",
-				"ms-toolsai.jupyter",
-				"ahmadawais.shades-of-purple",
-				"twixes.pypi-assistant"
-			],
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "ahmadawais.shades-of-purple",
+                "twixes.pypi-assistant",
+                "GitHub.copilot"
+            ],
             "settings": {
                 "workbench.colorTheme": "Shades of Purple (Super Dark)",
-                "python.pythonPath": ".venv/bin/python"
+                "python.pythonPath": "${WorkspaceFolder}/.venv/bin/python"
             }
         }
+
     }
 }
