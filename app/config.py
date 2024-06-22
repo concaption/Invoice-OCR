@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     LANGCHAIN_API_KEY: str = os.getenv('LANGCHAIN_API_KEY')
     LANGCHAIN_TRACING_V2: str = os.getenv('LANGCHAIN_TRACING_V2')
 
+    DRIVE_FOLDER_ID: str = os.getenv('DRIVE_FOLDER_ID')
+
     class Config:
         """
         Config class to load environment variables from .env file
