@@ -6,7 +6,8 @@
                 "ms-toolsai.jupyter",
                 "ahmadawais.shades-of-purple",
                 "twixes.pypi-assistant",
-                "GitHub.copilot"
+                "GitHub.copilot",
+                "ahmadawais.emoji-log-vscode"
             ],
             "settings": {
                 "workbench.colorTheme": "Shades of Purple (Super Dark)",
