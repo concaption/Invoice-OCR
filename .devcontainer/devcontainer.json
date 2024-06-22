@@ -7,7 +7,8 @@
                 "ahmadawais.shades-of-purple",
                 "twixes.pypi-assistant",
                 "GitHub.copilot",
-                "ahmadawais.emoji-log-vscode"
+                "ahmadawais.emoji-log-vscode",
+                "analytic-signal.preview-pdf"
             ],
             "settings": {
                 "workbench.colorTheme": "Shades of Purple (Super Dark)",
