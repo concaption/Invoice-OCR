@@ -50,10 +50,9 @@ async def job():
                     drive_client = DriveClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
                     for bol in result:
                         file_name = bol.get('file_name')
-                        binary_data = bol.get('binary_data')
+                        binary_data = bol.get('pdf')
                         pdf_link = drive_client.upload_pdf(binary_data, file_name, parent_folder_id = settings.DRIVE_FOLDER_ID)
                         bol['pdf_link'] = pdf_link
-
                     data = [
                         {
                             'ship_from_company_name': item['shipment_info']['ship_from']['company_name'],
