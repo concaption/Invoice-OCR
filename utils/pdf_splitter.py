@@ -1,8 +1,13 @@
 import fitz
 import base64
 from tqdm import tqdm
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def split_pdf(pdf_data):
+    logger.info("Splitting PDF")
     doc = fitz.open(stream=pdf_data, filetype="pdf")
     bol_info_list = []
 
@@ -28,17 +33,18 @@ def split_pdf(pdf_data):
             "image": image_base64,
             "pdf": pdf_bytes
         })
-
     doc.close()
+    logger.info("PDF Splitting complete. Found %d BoLs", len(bol_info_list))
     return bol_info_list
 
 def process_pdf(pdf_bytes, ocr_tool, pdf_name=""):
     bol_info_list = split_pdf(pdf_bytes)
     for bol_info in tqdm(bol_info_list, desc=f"Processing BOLs from {pdf_name}"):
+        page_num = bol_info_list.index(bol_info)    
         img = bol_info["image"]
-        pdf_bytes = bol_info["pdf"]
         shipment_info = ocr_tool.run(img)
         if shipment_info is None:
+            logger.warning("No shipment info found for BoL in %s at page %d", pdf_name, page_num)
             continue
         order_number = shipment_info.get("customer_order_information", {}).get("order_number", "")
         shipment_id = shipment_info.get("customer_order_information", {}).get("shipment_id", "")

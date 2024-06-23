@@ -10,10 +10,19 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
 
+from utils.ocr import OCRTool
+from utils.pdf_splitter import process_pdf
+
+
 from utils.emailclient import EmailAttachmentExtractor
 from utils.sheet import SheetsClient
+from utils.drive import DriveClient
 from app.config import settings
+import logging
+import pandas as pd
+from tqdm import tqdm
 
+logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 
@@ -24,48 +33,64 @@ async def job():
     email_client = EmailAttachmentExtractor(
         email_address=settings.EMAIL_ADDRESS,
         password=settings.EMAIL_PASSWORD,
-        imap_server=settings.IMAP_SERVER
-        )
-    sheets_client = SheetsClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
-
-    # Connect to the IMAP server and fetch the latest emails
-
+        imap_server=settings.IMAP_SERVER)
     if email_client.connect():
-        if not os.path.exists(settings.PDF_DIR):
-            os.makedirs(settings.PDF_DIR)
-
         today = datetime.now().strftime("%d-%b-%Y")
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%b-%Y")
         pdfs = email_client.extract_pdf_attachments(num_emails=200,
-                                            subject_contains=settings.WORD_IN_SUBJECT,
-                                            date_from=yesterday,
-                                            date_to=today)
-        # iterate through the pdfs in tempdir and save them to Google Sheets
-        for pdf_file in pdfs:
+                                                subject_contains=settings.WORD_IN_SUBJECT,
+                                                # date_from=yesterday,
+                                                # date_to=today
+                                                )               
+        try:
+            for pdf in tqdm(pdfs):
+                result = process_pdf(pdf['binary_data'], OCRTool(), pdf['file_name'])
+                
+                try:
+                    drive_client = DriveClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
+                    for bol in result:
+                        file_name = bol.get('file_name')
+                        binary_data = bol.get('binary_data')
+                        pdf_link = drive_client.upload_pdf(binary_data, file_name, parent_folder_id = settings.DRIVE_FOLDER_ID)
+                        bol['pdf_link'] = pdf_link
 
-            """
-            file_path = os.path.join(settings.PDF_DIR, pdf_file)
-            print("Processing file: ", file_path)
-            try:
-                invoice = Invoice(file_path)
-                order = dataframe_to_order(invoice.to_dataframe)
-                data = json.loads( order.model_dump_json())
-                response = httpx.post("https://iasp2.up.railway.app/items/invoice", json=data)
-                if response.status_code != 200:
-                    print(f"Error processing file: {file_path}")
-                else:
-                    print(f"File {file_path} processed successfully.")
-                sheets_client.add_dataframe(
-                    data_frame=invoice.to_dataframe,
-                    sheet_name=settings.SHEET_NAME,
-                    spreadsheet_name=settings.SPREADSHEET_NAME
-                )
-                print(f"Data written to Google Sheets for {pdf_file}")
-            except:
-                print(f"Fata Not written for {pdf_file}")
-            # Delete the file from the tempdir
-            os.remove(file_path)
-            """
+                    data = [
+                        {
+                            'ship_from_company_name': item['shipment_info']['ship_from']['company_name'],
+                            'ship_from_contact_person': item['shipment_info']['ship_from']['contact_person'],
+                            'ship_from_contact_number': item['shipment_info']['ship_from']['contact_number'],
+                            'ship_from_address': item['shipment_info']['ship_from']['address'],
+                            'ship_to_company_name': item['shipment_info']['ship_to']['company_name'],
+                            'ship_to_contact_person': item['shipment_info']['ship_to']['contact_person'],
+                            'ship_to_contact_number': item['shipment_info']['ship_to']['contact_number'],
+                            'ship_to_address': item['shipment_info']['ship_to']['address'],
+                            'carrier_name': item['shipment_info']['carrier_info']['carrier_name'],
+                            'scac': item['shipment_info']['carrier_info']['scac'],
+                            'pro_number': item['shipment_info']['carrier_info']['pro_number'],
+                            'order_number': item['shipment_info']['customer_order_information']['order_number'],
+                            'shipment_id': item['shipment_info']['customer_order_information']['shipment_id'],
+                            'pallets': item['shipment_info']['customer_order_information']['pallets'],
+                            'cartons': item['shipment_info']['customer_order_information']['cartons'],
+                            'weight': item['shipment_info']['customer_order_information']['weight'],
+                            'pdf_link': item['pdf_link'],
+                        } 
+                        for item in result
+                    ]
+
+                    result_dataframe = pd.DataFrame(data)
+                    sheets_client = SheetsClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
+                    sheets_client.add_dataframe(
+                                        data_frame=result_dataframe,
+                                        sheet_name=settings.SHEET_NAME,
+                                        spreadsheet_name=settings.SPREADSHEET_NAME
+                                    )
+                except Exception as e:
+                    logger.error(f"Error processing. Error: {e}")
+                    continue
+
+        except Exception as e:
+            logger.error(f"Error processing pdf: {e}")
+            email_client.disconnect()
 
 def start():
     """

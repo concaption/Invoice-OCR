@@ -94,18 +94,15 @@ class SheetsClient:
                 gd.set_with_dataframe(sheet, data_frame)
                 logger.info("Appended dataframe to an empty sheet")
             else:
-                existing_order_numbers = set(existing_values['Order Number'].unique())
-                new_order_numbers = set(data_frame['Order Number'].unique())
+                existing_order_numbers = set(existing_values['order_number'].unique())
+                new_order_numbers = set(data_frame['order_number'].unique())
                 duplicates = existing_order_numbers.intersection(new_order_numbers)
-                
-                if not duplicates:
-                    df_combined = pd.concat([existing_values, data_frame])
-                    df_combined = df_combined.astype(str)
-                    df_combined = df_combined.reset_index(drop=True)
-                    gd.set_with_dataframe(sheet, df_combined)
-                    logger.info("Appended dataframe to an existing sheet")
-                else:
-                    logger.warning("Duplicate 'Order Number' found in the new data. Data not appended.")    
+                data_frame = data_frame[~data_frame['order_number'].isin(duplicates)]
+                df_combined = pd.concat([existing_values, data_frame])
+                df_combined = df_combined.astype(str)
+                df_combined = df_combined.reset_index(drop=True)
+                gd.set_with_dataframe(sheet, df_combined)
+                logger.info("Appended dataframe to an existing sheet")    
         else:
             gd.set_with_dataframe(sheet, data_frame)
             logger.info("Added dataframe to an existing sheet")

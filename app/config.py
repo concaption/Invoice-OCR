@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     DRIVE_FOLDER_ID: str = os.getenv('DRIVE_FOLDER_ID')
 
+    PORT: str = os.getenv('PORT', 8000)
+
     class Config:
         """
         Config class to load environment variables from .env file

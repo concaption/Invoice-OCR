@@ -28,23 +28,21 @@ class DriveClient:
         self.credentials = SAC.from_json_keyfile_name(self.credentials_file_path, self.scope)
         self.service = build('drive', 'v3', credentials=self.credentials)
 
-    def upload_pdf(self, file_data, file_path, parent_folder_id=None):
+    def upload_pdf(self, file_data, file_name, parent_folder_id=None):
         """
         Uploads a PDF to Google Drive and returns the file link.
         
         Args:
         - file_data: Binary data of the PDF file.
-        - file_path: The full path of the file to be saved, including folders.
+        - file_name: The full name of the file to be saved.
         - parent_folder_id: The ID of the parent folder where the file should be uploaded. (Optional)
         
         Returns:
         - The link to the uploaded PDF.
         """
-        # Extract file name and folders from file path
-        folders, file_name = os.path.split(file_path)
-        folder_ids = self.create_folders_recursively(folders.split(os.sep), parent_folder_id)
+        logger.info(f"Uploading file '{file_name}' to Google Drive as PDF at parent folder ID '{parent_folder_id}'...")
 
-        file_metadata = {'name': file_name, 'mimeType': 'application/pdf', 'parents': [folder_ids[-1]]}
+        file_metadata = {'name': file_name, 'mimeType': 'application/pdf', 'parents': [parent_folder_id]}
         
         media = MediaIoBaseUpload(io.BytesIO(file_data), mimetype='application/pdf')
         
@@ -55,6 +53,7 @@ class DriveClient:
         ).execute()
 
         logger.info(f"Uploaded file '{file_name}' with file ID '{file.get('id')}'")
+        logger.info(f"File link: {file.get('webViewLink')}")
         
         return file.get('webViewLink')
 

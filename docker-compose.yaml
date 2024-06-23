@@ -1,0 +1,9 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:${PORT}"
+    env_file:
+      - .env

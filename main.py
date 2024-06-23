@@ -67,8 +67,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-# Configure your secret key
-app.add_middleware(SessionMiddleware, secret_key="your-secret-key-here")
 
 if __name__ == "__main__":
     import uvicorn
