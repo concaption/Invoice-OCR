@@ -44,8 +44,8 @@ async def job():
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%b-%Y")
         pdfs = email_client.extract_pdf_attachments(num_emails=200,
                                                 subject_contains=settings.WORD_IN_SUBJECT,
-                                                # date_from=yesterday,
-                                                # date_to=today
+                                                date_from=yesterday,
+                                                date_to=today
                                                 )
         try:
             for pdf in tqdm(pdfs):
