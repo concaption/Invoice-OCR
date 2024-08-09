@@ -44,8 +44,8 @@ async def job():
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%b-%Y")
         pdfs = email_client.extract_pdf_attachments(num_emails=200,
                                                 subject_contains=settings.WORD_IN_SUBJECT,
-                                                date_from=yesterday,
-                                                date_to=today
+                                                # date_from=yesterday,
+                                                # date_to=today
                                                 )
         try:
             for pdf in tqdm(pdfs):
@@ -75,34 +75,34 @@ async def job():
                         cartons = bol.get('shipment_info', {}).get('customer_order_information', {}).get('cartons')
                         weight = bol.get('shipment_info', {}).get('customer_order_information', {}).get('weight')
                         pdf_link = bol.get('pdf_link')
-                    data = [
-                            {
-                                'ship_from_company_name': ship_from_company_name,
-                                'ship_from_contact_person': ship_from_contact_person,
-                                'ship_from_contact_number': clean_phone_number(ship_from_contact_number),
-                                'ship_from_address': ship_from_address,
-                                'ship_to_company_name': ship_to_company_name,
-                                'ship_to_contact_person': ship_to_contact_person,
-                                'ship_to_contact_number': clean_phone_number(ship_to_contact_number),
-                                'ship_to_address': ship_to_address,
-                                'carrier_name': carrier_name,
-                                'scac': scac,
-                                'pro_number': pro_number,
-                                'order_number': order_number,
-                                'shipment_id': shipment_id,
-                                'pallets': pallets,
-                                'cartons': cartons,
-                                'weight': weight,
-                                'pdf_link': pdf_link,
-                            }
-                        ]
-                    result_dataframe = pd.DataFrame(data)
-                    sheets_client = SheetsClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
-                    sheets_client.add_dataframe(
-                                        data_frame=result_dataframe,
-                                        sheet_name=settings.SHEET_NAME,
-                                        spreadsheet_name=settings.SPREADSHEET_NAME
-                                    )
+                        data = [
+                                {
+                                    'ship_from_company_name': ship_from_company_name,
+                                    'ship_from_contact_person': ship_from_contact_person,
+                                    'ship_from_contact_number': clean_phone_number(ship_from_contact_number),
+                                    'ship_from_address': ship_from_address,
+                                    'ship_to_company_name': ship_to_company_name,
+                                    'ship_to_contact_person': ship_to_contact_person,
+                                    'ship_to_contact_number': clean_phone_number(ship_to_contact_number),
+                                    'ship_to_address': ship_to_address,
+                                    'carrier_name': carrier_name,
+                                    'scac': scac,
+                                    'pro_number': pro_number,
+                                    'order_number': order_number,
+                                    'shipment_id': shipment_id,
+                                    'pallets': pallets,
+                                    'cartons': cartons,
+                                    'weight': weight,
+                                    'pdf_link': pdf_link,
+                                }
+                            ]
+                        result_dataframe = pd.DataFrame(data)
+                        sheets_client = SheetsClient(credentials_file_path=settings.CREDENTIALS_FILE_PATH)
+                        sheets_client.add_dataframe(
+                                            data_frame=result_dataframe,
+                                            sheet_name=settings.SHEET_NAME,
+                                            spreadsheet_name=settings.SPREADSHEET_NAME
+                                        )
                 except Exception as e:
                     logger.error(f"Error processing. Error: {e}")
                     continue
