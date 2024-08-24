@@ -9,9 +9,12 @@ sharing them.
 import logging
 from oauth2client.service_account import ServiceAccountCredentials as SAC
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+from googleapiclient.http import MediaIoBaseUpload,MediaIoBaseDownload
 import io
 import os
+from urllib.parse import urlparse, parse_qs
+import base64
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -127,3 +130,84 @@ class DriveClient:
         logger.info(f"Shared file '{file_id}' with email '{email}'")
         
         return True
+    
+    def get_file_id_from_url(self, url):
+        """
+        Extract the file ID from a Google Drive URL.
+        
+        Args:
+        - url: The Google Drive URL of the file.
+        
+        Returns:
+        - The file ID if found, None otherwise.
+        """
+        parsed_url = urlparse(url)
+        if parsed_url.hostname == 'drive.google.com' and parsed_url.path.startswith('/file/d/'):
+            return parsed_url.path.split('/')[3]
+        elif parsed_url.hostname == 'drive.google.com' and parsed_url.path == '/open':
+            query_params = parse_qs(parsed_url.query)
+            return query_params.get('id', [None])[0]
+        return None
+
+    def download_file(self, file_id):
+        """
+        Download a file from Google Drive using its file ID.
+        
+        Args:
+        - file_id: The ID of the file to download.
+        
+        Returns:
+        - The file content as bytes.
+        """
+        request = self.service.files().get_media(fileId=file_id)
+        file = io.BytesIO()
+        downloader = MediaIoBaseDownload(file, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            logger.info(f"Download {int(status.progress() * 100)}%.")
+        return file.getvalue()
+
+    def download_file_from_url(self, url):
+        """
+        Download a file from Google Drive using its URL.
+        
+        Args:
+        - url: The Google Drive URL of the file.
+        
+        Returns:
+        - The file content as bytes.
+        """
+        file_id = self.get_file_id_from_url(url)
+        if not file_id:
+            logger.error("Invalid Google Drive URL")
+            return None
+        return self.download_file(file_id)
+
+    def file_to_base64(self, file_content):
+        """
+        Convert file content to a base64 encoded string.
+        
+        Args:
+        - file_content: The content of the file as bytes.
+        
+        Returns:
+        - Base64 encoded string of the file content.
+        """
+        return base64.b64encode(file_content).decode('utf-8')
+
+    def download_and_encode(self, file_url):
+        """
+        Download a file from Google Drive and encode it to base64.
+        
+        Args:
+        - file_url: The Google Drive URL of the file.
+        
+        Returns:
+        - Base64 encoded string of the file content.
+        """
+        file_content = self.download_file_from_url(file_url)
+        if file_content:
+            return self.file_to_base64(file_content),self.get_file_id_from_url(file_url)
+        return None
+

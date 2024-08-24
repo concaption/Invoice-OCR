@@ -37,6 +37,13 @@ class Settings(BaseSettings):
 
     DRIVE_FOLDER_ID: str = os.getenv('DRIVE_FOLDER_ID')
 
+    # Seller Cloud configurations
+    SELLER_EMAIL_ADDRESS: str = os.getenv('SELLER_EMAIL_ADDRESS')
+    SELLER_PWD: str = os.getenv('SELLER_PWD')
+    SELLER_CLOUD: str = os.getenv('SELLER_CLOUD')
+
+
+
     PORT: str = os.getenv('PORT', 8000)
 
     class Config:
