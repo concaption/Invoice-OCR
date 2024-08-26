@@ -40,8 +40,8 @@ async def job():
         password=settings.EMAIL_PASSWORD,
         imap_server=settings.IMAP_SERVER)
     if email_client.connect():
-        today = (datetime.now()+ timedelta(days=1)).strftime("%d-%b-%Y")
-        yesterday = (datetime.now() - timedelta(days=2)).strftime("%d-%b-%Y")
+        today = datetime.now().strftime("%d-%b-%Y")
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%d-%b-%Y")
         pdfs = email_client.extract_pdf_attachments(num_emails=200,
                                                 subject_contains=settings.WORD_IN_SUBJECT,
                                                 date_from=yesterday,

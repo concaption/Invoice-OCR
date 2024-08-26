@@ -87,6 +87,8 @@ class SheetsClient:
         sheet, _ = self.get_or_create_sheet(sheet_name, spreadsheet_name, obj=True)
         existing_values = gd.get_as_dataframe(sheet)
         data_frame = data_frame.astype(str)
+        data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        data_frame['reviewed'] = 'FALSE'
         existing_values.dropna(how='all', inplace=True)
         existing_values.dropna(axis=1, how='all', inplace=True)
         existing_values = existing_values.astype(str)
@@ -163,18 +165,16 @@ class SheetsClient:
             sheet1, _ = self.get_or_create_sheet(sheet1_name, spreadsheet_name, obj=True)
             sheet2, _ = self.get_or_create_sheet(sheet2_name, spreadsheet_name, obj=True)
             df1 = gd.get_as_dataframe(sheet1)
-            # df1=df1[df1['status'] == 'Matched']
             df2 = gd.get_as_dataframe(sheet2)
             # Ensure the 'Status' column exists
             if 'status' not in df1.columns:
-                df1['status'] = ''
+                df1['status'] = 'Not Uploaded'
             matched_ids=[]
             # Perform matching and update the 'Status' column
             for index, row in df1.iterrows():
                 match = df2[df2[tab2_column] == row[tab1_column]]
                 if not match.empty :
-                    if not df1.at[index, 'status'] == 'Uploaded':
-                        df1.at[index, 'reviewed'] = 'FALSE'
+                    if not df1.at[index, 'status'] == 'Uploaded' or not df1.at[index, 'status']=='TRUE':
                         df1.at[index, 'status'] = 'Not Uploaded'
                         matched_row = match.iloc[0]
                         matched_ids.append({
@@ -184,7 +184,6 @@ class SheetsClient:
                                     })
                 else:
                     df1.at[index, 'status'] = 'Unmatched'
-                    df1.at[index, 'reviewed'] = 'FALSE'
 
             # Update the sheet with the new DataFrame
             df1 = df1.reset_index(drop=True)
