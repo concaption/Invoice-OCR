@@ -125,7 +125,7 @@ class SheetsClient:
         """
         sheet, _ = self.get_or_create_sheet(sheet_name, spreadsheet_name, obj=True)
         existing_values = gd.get_as_dataframe(sheet)
-
+        data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # data_frame = data_frame.astype(str)
         existing_values.dropna(how='all', inplace=True)
@@ -133,7 +133,6 @@ class SheetsClient:
         existing_values = existing_values.astype(str)
         if append:
             if existing_values.empty:
-                data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 gd.set_with_dataframe(sheet, data_frame)
                 logger.info("Appended dataframe to an empty sheet")
                 print("Appended dataframe to an empty sheet")
@@ -141,17 +140,15 @@ class SheetsClient:
                 existing_order_numbers = set(existing_values['order_number'].unique())
                 print(existing_order_numbers)
                 new_order_numbers = set(data_frame['order_number'].unique())
-                print(existing_order_numbers)
+                print(new_order_numbers)
                 duplicates = existing_order_numbers.intersection(new_order_numbers)
                 data_frame = data_frame[~data_frame['order_number'].isin(duplicates)]
                 df_combined = pd.concat([existing_values, data_frame])
                 df_combined = df_combined.astype(str)
                 df_combined = df_combined.reset_index(drop=True)
-                df_combined['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 gd.set_with_dataframe(sheet, df_combined)
                 logger.info("Appended dataframe to an existing sheet")   
         else:
-            data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             gd.set_with_dataframe(sheet, data_frame)
             logger.info("Added dataframe to an existing sheet")
         return True

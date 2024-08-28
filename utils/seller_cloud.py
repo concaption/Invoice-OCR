@@ -51,7 +51,7 @@ def get_all_orders(api_token):
 def data_parse(orders):
     # Extract the ID and OrderSourceOrderID for each item
     try:
-        result = [(item["ID"], item["OrderSourceOrderID"].replace("-Sample", "")) for item in orders["Items"]]
+        result = [(item["ID"], item["OrderSourceOrderID"].replace("-Sample", "") if item["OrderSourceOrderID"] else "Missing") for item in orders["Items"]]
     except:
         return None
     return result
