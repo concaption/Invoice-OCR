@@ -126,8 +126,6 @@ class SheetsClient:
         sheet, _ = self.get_or_create_sheet(sheet_name, spreadsheet_name, obj=True)
         existing_values = gd.get_as_dataframe(sheet)
 
-        # Add current datetime column to data_frame
-        data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # data_frame = data_frame.astype(str)
         existing_values.dropna(how='all', inplace=True)
@@ -135,6 +133,7 @@ class SheetsClient:
         existing_values = existing_values.astype(str)
         if append:
             if existing_values.empty:
+                data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 gd.set_with_dataframe(sheet, data_frame)
                 logger.info("Appended dataframe to an empty sheet")
                 print("Appended dataframe to an empty sheet")
@@ -148,9 +147,11 @@ class SheetsClient:
                 df_combined = pd.concat([existing_values, data_frame])
                 df_combined = df_combined.astype(str)
                 df_combined = df_combined.reset_index(drop=True)
+                df_combined['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 gd.set_with_dataframe(sheet, df_combined)
                 logger.info("Appended dataframe to an existing sheet")   
         else:
+            data_frame['current_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             gd.set_with_dataframe(sheet, data_frame)
             logger.info("Added dataframe to an existing sheet")
         return True
@@ -174,7 +175,7 @@ class SheetsClient:
             for index, row in df1.iterrows():
                 match = df2[df2[tab2_column] == row[tab1_column]]
                 if not match.empty :
-                    if not df1.at[index, 'status'] == 'Uploaded' or not df1.at[index, 'status']=='TRUE':
+                    if not (df1.at[index, 'status'] == 'Uploaded' or df1.at[index, 'status']=='TRUE') :
                         df1.at[index, 'status'] = 'Not Uploaded'
                         matched_row = match.iloc[0]
                         matched_ids.append({
